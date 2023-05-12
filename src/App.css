@@ -4,3 +4,10 @@
   width: 100%;
   text-align: center;
 }
+
+header div {
+  display: flex;
+  justify-content: space-around;
+  width: 40%;
+  margin: 0 auto;
+}
