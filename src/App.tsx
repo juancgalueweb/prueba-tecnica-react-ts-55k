@@ -5,7 +5,12 @@ import { type User } from './types.d'
 
 function App() {
   const [users, setUsers] = useState<User[]>([])
+  const [colorRows, setColorRows] = useState(false)
   const apiUrl = 'https://randomuser.me/api/?results=100'
+
+  const toggleColors = () => {
+    setColorRows(!colorRows)
+  }
 
   useEffect(() => {
     fetch(apiUrl)
@@ -21,7 +26,18 @@ function App() {
   return (
     <div className='App'>
       <h1>Prueba técnica</h1>
-      <UsersList users={users} />
+      <header>
+        <button
+          onClick={() => {
+            toggleColors()
+          }}
+        >
+          Cambiar color
+        </button>
+      </header>
+      <main>
+        <UsersList users={users} colorRows={colorRows} />
+      </main>
     </div>
   )
 }

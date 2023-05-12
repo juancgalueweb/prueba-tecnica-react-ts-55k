@@ -3,22 +3,27 @@ import { type User } from '../types.d'
 
 interface Props {
   users: User[]
+  colorRows: boolean
 }
 
-const UsersList: FC<Props> = ({ users }) => {
+const UsersList: FC<Props> = ({ users, colorRows }) => {
   return (
-    <table width='100%'>
+    <table width='100%' style={{ marginTop: '30px' }}>
       <thead>
-        <th>Foto</th>
-        <th>Nombre</th>
-        <th>Apellido</th>
-        <th>País</th>
-        <th>Acciones</th>
+        <tr>
+          <th>Foto</th>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>País</th>
+          <th>Acciones</th>
+        </tr>
       </thead>
       <tbody>
-        {users.map(user => {
+        {users.map((user, index) => {
+          const backgroundColor = index % 2 === 0 ? '#f1f5f9' : '#f8fafc'
+          const colors = colorRows ? backgroundColor : 'transparent'
           return (
-            <tr key={user.id.value}>
+            <tr key={user.login.uuid} style={{ backgroundColor: colors }}>
               <td>
                 <img
                   src={user.picture.thumbnail}
