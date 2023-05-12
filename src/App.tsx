@@ -25,6 +25,11 @@ function App() {
       })
     : users
 
+  const handleDelete = (uuid: string) => {
+    const filteredUsers = users.filter(user => user.login.uuid !== uuid)
+    setUsers(filteredUsers)
+  }
+
   useEffect(() => {
     fetch(apiUrl)
       .then(async res => await res.json())
@@ -58,7 +63,11 @@ function App() {
         </div>
       </header>
       <main>
-        <UsersList users={sortedUsers} colorRows={colorRows} />
+        <UsersList
+          users={sortedUsers}
+          colorRows={colorRows}
+          deleteUser={handleDelete}
+        />
       </main>
     </div>
   )

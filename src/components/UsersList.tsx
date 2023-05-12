@@ -2,13 +2,14 @@ import { type FC } from 'react'
 import { type User } from '../types.d'
 
 interface Props {
+  deleteUser: (uuid: string) => void
   users: User[]
   colorRows: boolean
 }
 
-const UsersList: FC<Props> = ({ users, colorRows }) => {
+const UsersList: FC<Props> = ({ users, colorRows, deleteUser }) => {
   return (
-    <table width='100%' style={{ marginTop: '30px' }}>
+    <table width='100%'>
       <thead>
         <tr>
           <th>Foto</th>
@@ -34,7 +35,13 @@ const UsersList: FC<Props> = ({ users, colorRows }) => {
               <td>{user.name.last}</td>
               <td>{user.location.country}</td>
               <td>
-                <button>Borrar</button>
+                <button
+                  onClick={() => {
+                    deleteUser(user.login.uuid)
+                  }}
+                >
+                  Borrar
+                </button>
               </td>
             </tr>
           )
