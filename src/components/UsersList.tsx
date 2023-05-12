@@ -1,4 +1,4 @@
-import { type FC } from 'react'
+import { useEffect, useState, type FC } from 'react'
 import { type User } from '../types.d'
 
 interface Props {
@@ -8,6 +8,23 @@ interface Props {
 }
 
 const UsersList: FC<Props> = ({ users, colorRows, deleteUser }) => {
+  const [colorScheme, setColorScheme] = useState('light')
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setColorScheme(mediaQuery.matches ? 'dark' : 'light')
+
+    const handleColorSchemeChange = (e: MediaQueryListEvent) => {
+      setColorScheme(e.matches ? 'dark' : 'light')
+    }
+
+    mediaQuery.addEventListener('change', handleColorSchemeChange)
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleColorSchemeChange)
+    }
+  }, [])
+
   return (
     <table width='100%'>
       <thead>
@@ -21,7 +38,10 @@ const UsersList: FC<Props> = ({ users, colorRows, deleteUser }) => {
       </thead>
       <tbody>
         {users.map((user, index) => {
-          const backgroundColor = index % 2 === 0 ? '#f1f5f9' : '#f8fafc'
+          const lightColors = index % 2 === 0 ? '#f1f5f9' : '#f8fafc'
+          const darkColors = index % 2 === 0 ? '#424242' : '#616161'
+          const backgroundColor =
+            colorScheme === 'light' ? lightColors : darkColors
           const colors = colorRows ? backgroundColor : 'transparent'
           return (
             <tr key={user.login.uuid} style={{ backgroundColor: colors }}>
