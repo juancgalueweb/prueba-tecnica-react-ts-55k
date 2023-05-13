@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import UsersList from './components/UsersList'
-import { type User } from './types.d'
+import { SortBy, type User } from './types.d'
 
 const apiUrl = 'https://randomuser.me/api/?results=100'
 
 function App() {
   const [users, setUsers] = useState<User[]>([])
   const [colorRows, setColorRows] = useState(false)
-  const [sortByCountry, setSortByCountry] = useState(false)
+  const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
   const [filterCountry, setFilterCountry] = useState<null | string>(null)
   const originalUsers = useRef<User[]>([])
 
@@ -17,7 +17,9 @@ function App() {
   }
 
   const toggleSortByCountry = () => {
-    setSortByCountry(prevState => !prevState)
+    const newSortingValue =
+      sorting === SortBy.NONE ? SortBy.COUNTRY : SortBy.NONE
+    setSorting(newSortingValue)
   }
 
   const filteredUsers = useMemo(() => {
@@ -30,15 +32,22 @@ function App() {
       : users
   }, [users, filterCountry])
 
-  // Recodar que se debe pasar una copia de los usuarios porque el médoto
-  // sort muta el array
+  // Recodar que se debe pasar una copia de los usuarios filtrados
+  // porque el médoto sort muta el array
   const sortedUsers = useMemo(() => {
-    return sortByCountry
-      ? [...filteredUsers].sort((a, b) => {
-          return a.location.country.localeCompare(b.location.country)
-        })
-      : filteredUsers
-  }, [filteredUsers, sortByCountry])
+    if (sorting === SortBy.NONE) return filteredUsers
+
+    const compareProperties: Record<string, (user: User) => any> = {
+      [SortBy.COUNTRY]: user => user.location.country,
+      [SortBy.NAME]: user => user.name.first,
+      [SortBy.LAST]: user => user.name.last
+    }
+
+    return [...filteredUsers].sort((a, b) => {
+      const extractProperty = compareProperties[sorting]
+      return extractProperty(a).localeCompare(extractProperty(b))
+    })
+  }, [filteredUsers, sorting])
 
   const handleDelete = (uuid: string) => {
     const filteredUsers = users.filter(user => user.login.uuid !== uuid)
@@ -47,6 +56,10 @@ function App() {
 
   const resetUsers = () => {
     setUsers(originalUsers.current)
+  }
+
+  const handleChangeSort = (sort: SortBy) => {
+    setSorting(sort)
   }
 
   useEffect(() => {
@@ -78,7 +91,9 @@ function App() {
               toggleSortByCountry()
             }}
           >
-            {sortByCountry ? 'No ordenar por país' : 'Ordenar por país'}
+            {sorting === SortBy.COUNTRY
+              ? 'No ordenar por país'
+              : 'Ordenar por país'}
           </button>
           <button
             onClick={() => {
@@ -101,6 +116,7 @@ function App() {
           users={sortedUsers}
           colorRows={colorRows}
           deleteUser={handleDelete}
+          changeSorting={handleChangeSort}
         />
       </main>
     </div>

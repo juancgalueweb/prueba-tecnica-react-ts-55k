@@ -1,14 +1,20 @@
 import { type FC } from 'react'
 import useColorScheme from '../hooks/useColorScheme'
-import { type User } from '../types.d'
+import { SortBy, type User } from '../types.d'
 
 interface Props {
+  changeSorting: (sort: SortBy) => void
   deleteUser: (uuid: string) => void
   users: User[]
   colorRows: boolean
 }
 
-const UsersList: FC<Props> = ({ users, colorRows, deleteUser }) => {
+const UsersList: FC<Props> = ({
+  changeSorting,
+  users,
+  colorRows,
+  deleteUser
+}) => {
   const { colorScheme } = useColorScheme()
 
   return (
@@ -16,9 +22,30 @@ const UsersList: FC<Props> = ({ users, colorRows, deleteUser }) => {
       <thead>
         <tr>
           <th>Foto</th>
-          <th>Nombre</th>
-          <th>Apellido</th>
-          <th>País</th>
+          <th
+            className='pointer'
+            onClick={() => {
+              changeSorting(SortBy.NAME)
+            }}
+          >
+            Nombre
+          </th>
+          <th
+            className='pointer'
+            onClick={() => {
+              changeSorting(SortBy.LAST)
+            }}
+          >
+            Apellido
+          </th>
+          <th
+            className='pointer'
+            onClick={() => {
+              changeSorting(SortBy.COUNTRY)
+            }}
+          >
+            País
+          </th>
           <th>Acciones</th>
         </tr>
       </thead>

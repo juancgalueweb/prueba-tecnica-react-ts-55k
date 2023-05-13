@@ -7,8 +7,22 @@
 
 header div {
   display: flex;
-  justify-content: space-around;
-  width: 60%;
-  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 40px;
+}
+
+header input {
+  height: 30px;
+  width: 150px;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.pointer:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
 }
