@@ -9,6 +9,7 @@ function App() {
   const [users, setUsers] = useState<User[]>([])
   const [colorRows, setColorRows] = useState(false)
   const [sortByCountry, setSortByCountry] = useState(false)
+  const [filterCountry, setFilterCountry] = useState<null | string>(null)
   const originalUsers = useRef<User[]>([])
 
   const toggleColors = () => {
@@ -19,13 +20,22 @@ function App() {
     setSortByCountry(prevState => !prevState)
   }
 
+  const filteredUsers =
+    filterCountry != null && filterCountry.length > 0
+      ? users.filter(user => {
+          return user.location.country
+            .toLowerCase()
+            .includes(filterCountry.toLowerCase())
+        })
+      : users
+
   // Recodar que se debe pasar una copia de los usuarios porque el médoto
   // sort muta el array
   const sortedUsers = sortByCountry
-    ? [...users].sort((a, b) => {
+    ? [...filteredUsers].sort((a, b) => {
         return a.location.country.localeCompare(b.location.country)
       })
-    : users
+    : filteredUsers
 
   const handleDelete = (uuid: string) => {
     const filteredUsers = users.filter(user => user.login.uuid !== uuid)
@@ -74,6 +84,13 @@ function App() {
           >
             Reestablecer ususarios
           </button>
+          <input
+            type='text'
+            placeholder='Filtra por país'
+            onChange={e => {
+              setFilterCountry(e.target.value)
+            }}
+          />
         </div>
       </header>
       <main>
