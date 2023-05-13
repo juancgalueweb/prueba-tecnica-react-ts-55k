@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import UsersList from './components/UsersList'
 import { type User } from './types.d'
@@ -20,22 +20,25 @@ function App() {
     setSortByCountry(prevState => !prevState)
   }
 
-  const filteredUsers =
-    filterCountry != null && filterCountry.length > 0
+  const filteredUsers = useMemo(() => {
+    return filterCountry != null && filterCountry.length > 0
       ? users.filter(user => {
           return user.location.country
             .toLowerCase()
             .includes(filterCountry.toLowerCase())
         })
       : users
+  }, [users, filterCountry])
 
   // Recodar que se debe pasar una copia de los usuarios porque el médoto
   // sort muta el array
-  const sortedUsers = sortByCountry
-    ? [...filteredUsers].sort((a, b) => {
-        return a.location.country.localeCompare(b.location.country)
-      })
-    : filteredUsers
+  const sortedUsers = useMemo(() => {
+    return sortByCountry
+      ? [...filteredUsers].sort((a, b) => {
+          return a.location.country.localeCompare(b.location.country)
+        })
+      : filteredUsers
+  }, [filteredUsers, sortByCountry])
 
   const handleDelete = (uuid: string) => {
     const filteredUsers = users.filter(user => user.login.uuid !== uuid)
