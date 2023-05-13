@@ -3,11 +3,12 @@ import './App.css'
 import UsersList from './components/UsersList'
 import { type User } from './types.d'
 
+const apiUrl = 'https://randomuser.me/api/?results=100'
+
 function App() {
   const [users, setUsers] = useState<User[]>([])
   const [colorRows, setColorRows] = useState(false)
   const [sortByCountry, setSortByCountry] = useState(false)
-  const apiUrl = 'https://randomuser.me/api/?results=100'
   const originalUsers = useRef<User[]>([])
 
   const toggleColors = () => {
@@ -49,7 +50,7 @@ function App() {
 
   return (
     <div className='App'>
-      <h1>Prueba técnica</h1>
+      <h1>Prueba técnica de React + Typescript</h1>
       <header>
         <div>
           <button

@@ -1,4 +1,5 @@
-import { useEffect, useState, type FC } from 'react'
+import { type FC } from 'react'
+import useColorScheme from '../hooks/useColorScheme'
 import { type User } from '../types.d'
 
 interface Props {
@@ -8,22 +9,7 @@ interface Props {
 }
 
 const UsersList: FC<Props> = ({ users, colorRows, deleteUser }) => {
-  const [colorScheme, setColorScheme] = useState('light')
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    setColorScheme(mediaQuery.matches ? 'dark' : 'light')
-
-    const handleColorSchemeChange = (e: MediaQueryListEvent) => {
-      setColorScheme(e.matches ? 'dark' : 'light')
-    }
-
-    mediaQuery.addEventListener('change', handleColorSchemeChange)
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleColorSchemeChange)
-    }
-  }, [])
+  const { colorScheme } = useColorScheme()
 
   return (
     <table width='100%'>
