@@ -3,7 +3,16 @@ import './App.css'
 import UsersList from './components/UsersList'
 import { SortBy, type User } from './types.d'
 
-const apiUrl = 'https://randomuser.me/api/?results=10'
+const fetchUsers = async (page: number) => {
+  return await fetch(
+    `https://randomuser.me/api?results=10&seed=juancho&page=${page}`
+  )
+    .then(async res => {
+      if (!res.ok) throw new Error('Error en la petición')
+      return await res.json()
+    })
+    .then(res => res.results)
+}
 
 function App() {
   const [users, setUsers] = useState<User[]>([])
@@ -12,6 +21,7 @@ function App() {
   const [filterCountry, setFilterCountry] = useState<null | string>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const originalUsers = useRef<User[]>([])
 
   const toggleColors = () => {
@@ -67,18 +77,14 @@ function App() {
   useEffect(() => {
     setLoading(true)
     setError(false)
-
-    fetch(apiUrl)
-      .then(async res => {
-        if (!res.ok) {
-          throw new Error('Error en la petición')
-        }
-        return await res.json()
-      })
-      .then(res => {
+    fetchUsers(currentPage)
+      .then(users => {
         // <- Se resuelve la promesa
-        originalUsers.current = res.results
-        setUsers(res.results)
+        setUsers(prevUsers => {
+          const newUsers = prevUsers.concat(users)
+          originalUsers.current = newUsers
+          return newUsers
+        })
       })
       .catch(error => {
         // <- Se manejan los errores
@@ -88,7 +94,7 @@ function App() {
         // <- Siempre se ejecuta
         setLoading(false)
       })
-  }, [])
+  }, [currentPage])
 
   return (
     <div className='App'>
@@ -128,16 +134,25 @@ function App() {
         </div>
       </header>
       <main>
-        {loading && <strong>Cargando...</strong>}
-        {!loading && error && <p>Ha habido un error</p>}
-        {!loading && !error && users.length === 0 && <p>No hay usuarios</p>}
-        {!loading && !error && users.length > 0 && (
+        {users.length > 0 && (
           <UsersList
             users={sortedUsers}
             colorRows={colorRows}
             deleteUser={handleDelete}
             changeSorting={handleChangeSort}
           />
+        )}
+        {loading && <strong>Cargando...</strong>}
+        {error && <p>Ha habido un error</p>}
+        {!error && users.length === 0 && <p>No hay usuarios</p>}
+        {!loading && !error && (
+          <button
+            onClick={() => {
+              setCurrentPage(currentPage + 1)
+            }}
+          >
+            Cargar más resultados
+          </button>
         )}
       </main>
     </div>
