@@ -3,13 +3,15 @@ import './App.css'
 import UsersList from './components/UsersList'
 import { SortBy, type User } from './types.d'
 
-const apiUrl = 'https://randomuser.me/api/?results=100'
+const apiUrl = 'https://randomuser.me/api/?results=10'
 
 function App() {
   const [users, setUsers] = useState<User[]>([])
   const [colorRows, setColorRows] = useState(false)
   const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
   const [filterCountry, setFilterCountry] = useState<null | string>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const originalUsers = useRef<User[]>([])
 
   const toggleColors = () => {
@@ -63,14 +65,28 @@ function App() {
   }
 
   useEffect(() => {
+    setLoading(true)
+    setError(false)
+
     fetch(apiUrl)
-      .then(async res => await res.json())
+      .then(async res => {
+        if (!res.ok) {
+          throw new Error('Error en la petición')
+        }
+        return await res.json()
+      })
       .then(res => {
+        // <- Se resuelve la promesa
         originalUsers.current = res.results
         setUsers(res.results)
       })
       .catch(error => {
-        console.error(error)
+        // <- Se manejan los errores
+        setError(error)
+      })
+      .finally(() => {
+        // <- Siempre se ejecuta
+        setLoading(false)
       })
   }, [])
 
@@ -112,12 +128,17 @@ function App() {
         </div>
       </header>
       <main>
-        <UsersList
-          users={sortedUsers}
-          colorRows={colorRows}
-          deleteUser={handleDelete}
-          changeSorting={handleChangeSort}
-        />
+        {loading && <strong>Cargando...</strong>}
+        {!loading && error && <p>Ha habido un error</p>}
+        {!loading && !error && users.length === 0 && <p>No hay usuarios</p>}
+        {!loading && !error && users.length > 0 && (
+          <UsersList
+            users={sortedUsers}
+            colorRows={colorRows}
+            deleteUser={handleDelete}
+            changeSorting={handleChangeSort}
+          />
+        )}
       </main>
     </div>
   )
