@@ -1,18 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import UsersList from './components/UsersList'
+import { fetchUsers } from './services/users'
 import { SortBy, type User } from './types.d'
-
-const fetchUsers = async (page: number) => {
-  return await fetch(
-    `https://randomuser.me/api?results=10&seed=juancho&page=${page}`
-  )
-    .then(async res => {
-      if (!res.ok) throw new Error('Error en la petición')
-      return await res.json()
-    })
-    .then(res => res.results)
-}
 
 function App() {
   const [users, setUsers] = useState<User[]>([])
@@ -133,6 +123,7 @@ function App() {
           />
         </div>
       </header>
+      <h2>Cantidad de usuarios: {users.length}</h2>
       <main>
         {users.length > 0 && (
           <UsersList
@@ -144,8 +135,8 @@ function App() {
         )}
         {loading && <strong>Cargando...</strong>}
         {error && <p>Ha habido un error</p>}
-        {!error && users.length === 0 && <p>No hay usuarios</p>}
-        {!loading && !error && (
+        {!loading && !error && users.length === 0 && <p>No hay usuarios</p>}
+        {!loading && !error && currentPage < 10 && (
           <button
             onClick={() => {
               setCurrentPage(currentPage + 1)
@@ -153,6 +144,9 @@ function App() {
           >
             Cargar más resultados
           </button>
+        )}
+        {!loading && !error && currentPage === 10 && (
+          <p>No hay más resultados</p>
         )}
       </main>
     </div>
