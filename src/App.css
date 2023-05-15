@@ -26,3 +26,20 @@ header input {
   text-decoration: underline;
   text-underline-offset: 6px;
 }
+
+h2 {
+  margin-bottom: 40px;
+}
+
+.no-results {
+  color: #c53030;
+  padding: 10px;
+  background-color: #fff5f5;
+  display: inline-block;
+  border-radius: 8px;
+  border: 1px solid #fc8180;
+}
+
+.no-results:hover {
+  cursor: not-allowed;
+}

@@ -146,7 +146,7 @@ function App() {
           </button>
         )}
         {!loading && !error && currentPage === 10 && (
-          <p>No hay más resultados</p>
+          <p className='no-results'>No hay más resultados</p>
         )}
       </main>
     </div>
