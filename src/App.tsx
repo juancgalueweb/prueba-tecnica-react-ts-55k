@@ -1,28 +1,43 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import './App.css'
 import UsersList from './components/UsersList'
 import { SortBy, type User } from './types.d'
 
-const fetchUsers = async (page: number) => {
+const fetchUsers = async ({ pageParam = 1 }: { pageParam?: number }) => {
   return await fetch(
-    `https://randomuser.me/api?results=10&seed=juancho&page=${page}`
+    `https://randomuser.me/api?results=10&seed=juancho&page=${pageParam}`
   )
     .then(async res => {
       if (!res.ok) throw new Error('Error en la petición')
       return await res.json()
     })
-    .then(res => res.results)
+    .then(res => {
+      const currentPage = Number(res.info.page)
+      const nextCursor = currentPage > 9 ? undefined : currentPage + 1
+
+      return {
+        users: res.results,
+        nextCursor
+      }
+    })
 }
 
 function App() {
-  const [users, setUsers] = useState<User[]>([])
+  const { isLoading, isError, data, refetch, fetchNextPage, hasNextPage } =
+    useInfiniteQuery<{ users: User[]; nextCursor?: number }>(
+      ['users'],
+      fetchUsers,
+      {
+        getNextPageParam: lastPage => lastPage.nextCursor
+      }
+    )
+
+  const users: User[] = data?.pages?.flatMap(page => page.users) ?? []
+
   const [colorRows, setColorRows] = useState(false)
   const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
   const [filterCountry, setFilterCountry] = useState<null | string>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const originalUsers = useRef<User[]>([])
 
   const toggleColors = () => {
     setColorRows(prevState => !prevState)
@@ -62,39 +77,17 @@ function App() {
   }, [filteredUsers, sorting])
 
   const handleDelete = (uuid: string) => {
-    const filteredUsers = users.filter(user => user.login.uuid !== uuid)
-    setUsers(filteredUsers)
+    // const filteredUsers = users.filter(user => user.login.uuid !== uuid)
+    // setUsers(filteredUsers)
   }
 
-  const resetUsers = () => {
-    setUsers(originalUsers.current)
+  const resetUsers = async () => {
+    await refetch()
   }
 
   const handleChangeSort = (sort: SortBy) => {
     setSorting(sort)
   }
-
-  useEffect(() => {
-    setLoading(true)
-    setError(false)
-    fetchUsers(currentPage)
-      .then(users => {
-        // <- Se resuelve la promesa
-        setUsers(prevUsers => {
-          const newUsers = prevUsers.concat(users)
-          originalUsers.current = newUsers
-          return newUsers
-        })
-      })
-      .catch(error => {
-        // <- Se manejan los errores
-        setError(error)
-      })
-      .finally(() => {
-        // <- Siempre se ejecuta
-        setLoading(false)
-      })
-  }, [currentPage])
 
   return (
     <div className='App'>
@@ -119,7 +112,7 @@ function App() {
           </button>
           <button
             onClick={() => {
-              resetUsers()
+              void resetUsers()
             }}
           >
             Reestablecer ususarios
@@ -142,17 +135,20 @@ function App() {
             changeSorting={handleChangeSort}
           />
         )}
-        {loading && <strong>Cargando...</strong>}
-        {error && <p>Ha habido un error</p>}
-        {!error && users.length === 0 && <p>No hay usuarios</p>}
-        {!loading && !error && (
+        {isLoading && <strong>Cargando...</strong>}
+        {isError && <p>Ha habido un error</p>}
+        {!isLoading && !isError && users.length === 0 && <p>No hay usuarios</p>}
+        {!isLoading && !isError && hasNextPage === true && (
           <button
             onClick={() => {
-              setCurrentPage(currentPage + 1)
+              void fetchNextPage()
             }}
           >
             Cargar más resultados
           </button>
+        )}
+        {!isLoading && !isError && hasNextPage === false && (
+          <p>No hay más resultados</p>
         )}
       </main>
     </div>
