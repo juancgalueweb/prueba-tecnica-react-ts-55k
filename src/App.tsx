@@ -1,17 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
-import Results from './components/Results'
 import UsersList from './components/UsersList'
-import { useUsers } from './hooks/useUsers'
+import { fetchUsers } from './services/users'
 import { SortBy, type User } from './types.d'
 
 function App() {
-  const { isLoading, isError, users, refetch, fetchNextPage, hasNextPage } =
-    useUsers()
-
+  const [users, setUsers] = useState<User[]>([])
   const [colorRows, setColorRows] = useState(false)
   const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
   const [filterCountry, setFilterCountry] = useState<null | string>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const originalUsers = useRef<User[]>([])
 
   const toggleColors = () => {
     setColorRows(prevState => !prevState)
@@ -51,17 +52,39 @@ function App() {
   }, [filteredUsers, sorting])
 
   const handleDelete = (uuid: string) => {
-    // const filteredUsers = users.filter(user => user.login.uuid !== uuid)
-    // setUsers(filteredUsers)
+    const filteredUsers = users.filter(user => user.login.uuid !== uuid)
+    setUsers(filteredUsers)
   }
 
-  const resetUsers = async () => {
-    await refetch()
+  const resetUsers = () => {
+    setUsers(originalUsers.current)
   }
 
   const handleChangeSort = (sort: SortBy) => {
     setSorting(sort)
   }
+
+  useEffect(() => {
+    setLoading(true)
+    setError(false)
+    fetchUsers(currentPage)
+      .then(users => {
+        // <- Se resuelve la promesa
+        setUsers(prevUsers => {
+          const newUsers = prevUsers.concat(users)
+          originalUsers.current = newUsers
+          return newUsers
+        })
+      })
+      .catch(error => {
+        // <- Se manejan los errores
+        setError(error)
+      })
+      .finally(() => {
+        // <- Siempre se ejecuta
+        setLoading(false)
+      })
+  }, [currentPage])
 
   return (
     <div className='App'>
@@ -86,7 +109,7 @@ function App() {
           </button>
           <button
             onClick={() => {
-              void resetUsers()
+              resetUsers()
             }}
           >
             Reestablecer ususarios
@@ -100,7 +123,7 @@ function App() {
           />
         </div>
       </header>
-      <Results />
+      <h2>Cantidad de usuarios: {users.length}</h2>
       <main>
         {users.length > 0 && (
           <UsersList
@@ -110,19 +133,19 @@ function App() {
             changeSorting={handleChangeSort}
           />
         )}
-        {isLoading && <strong>Cargando...</strong>}
-        {isError && <p>Ha habido un error</p>}
-        {!isLoading && !isError && users.length === 0 && <p>No hay usuarios</p>}
-        {!isLoading && !isError && hasNextPage === true && (
+        {loading && <strong>Cargando...</strong>}
+        {error && <p>Ha habido un error</p>}
+        {!loading && !error && users.length === 0 && <p>No hay usuarios</p>}
+        {!loading && !error && currentPage < 10 && (
           <button
             onClick={() => {
-              void fetchNextPage()
+              setCurrentPage(currentPage + 1)
             }}
           >
             Cargar más resultados
           </button>
         )}
-        {!isLoading && !isError && hasNextPage === false && (
+        {!loading && !error && currentPage === 10 && (
           <p>No hay más resultados</p>
         )}
       </main>
