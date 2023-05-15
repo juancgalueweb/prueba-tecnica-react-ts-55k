@@ -1,39 +1,13 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import './App.css'
+import Results from './components/Results'
 import UsersList from './components/UsersList'
+import { useUsers } from './hooks/useUsers'
 import { SortBy, type User } from './types.d'
 
-const fetchUsers = async ({ pageParam = 1 }: { pageParam?: number }) => {
-  return await fetch(
-    `https://randomuser.me/api?results=10&seed=juancho&page=${pageParam}`
-  )
-    .then(async res => {
-      if (!res.ok) throw new Error('Error en la petición')
-      return await res.json()
-    })
-    .then(res => {
-      const currentPage = Number(res.info.page)
-      const nextCursor = currentPage > 9 ? undefined : currentPage + 1
-
-      return {
-        users: res.results,
-        nextCursor
-      }
-    })
-}
-
 function App() {
-  const { isLoading, isError, data, refetch, fetchNextPage, hasNextPage } =
-    useInfiniteQuery<{ users: User[]; nextCursor?: number }>(
-      ['users'],
-      fetchUsers,
-      {
-        getNextPageParam: lastPage => lastPage.nextCursor
-      }
-    )
-
-  const users: User[] = data?.pages?.flatMap(page => page.users) ?? []
+  const { isLoading, isError, users, refetch, fetchNextPage, hasNextPage } =
+    useUsers()
 
   const [colorRows, setColorRows] = useState(false)
   const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
@@ -126,6 +100,7 @@ function App() {
           />
         </div>
       </header>
+      <Results />
       <main>
         {users.length > 0 && (
           <UsersList
